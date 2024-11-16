@@ -11,21 +11,38 @@ provider:
     role: arn:aws:iam::498917627164:role/LabRole
 
 functions:
-  crearResena:
+  crearResenia:
     handler: crearResenia.handler
     events:
       - http:
-          path: /resenias/crear
+          path: /reviews
           method: post
           cors: true
           integration: lambda
-  obtenerReseñas:
+  obtenerResenia:
     handler: obtenerResenia.handler
     events:
       - http:
           path: /reviews
           method: get
           cors: true
+
+  modificarResenia:
+    handler: modificarResenia.handler
+    events:
+      - http:
+          path: /reviews
+          method: put
+          cors: true
+
+  eliminarResenia:
+    handler: eliminarResenia.handler
+    events:
+      - http:
+          path: /reviews
+          method: delete
+          cors: true
+
 
 resources:
   Resources:
@@ -47,9 +64,7 @@ resources:
             KeyType: HASH
           - AttributeName: id_resenia
             KeyType: RANGE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
+        BillingMode: PAY_PER_REQUEST
 
         # Índice Secundario Local (LSI)
         LocalSecondaryIndexes:
@@ -72,6 +87,3 @@ resources:
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
-            ProvisionedThroughput:
-              ReadCapacityUnits: 5
-              WriteCapacityUnits: 5
