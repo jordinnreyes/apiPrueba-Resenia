@@ -5,35 +5,23 @@ const REVIEWS_TABLE = process.env.REVIEWS_TABLE;
 
 exports.handler = async (event) => {
     try {
-        // Inicio - Proteger el Lambda
-        const token = event.headers.Authorization;
-        const lambda = new AWS.Lambda();
+        // Obtener el id_vuelo desde el cuerpo de la solicitud
+        const { id_vuelo } = JSON.parse(event.body);
 
-        const authResponse = await lambda.invoke({
-            FunctionName: "ValidarTokenAcceso",
-            InvocationType: "RequestResponse",
-            Payload: JSON.stringify({ token })
-        }).promise();
-
-        const authPayload = JSON.parse(authResponse.Payload);
-
-        if (authPayload.statusCode === 403) {
+        if (!id_vuelo) {
             return {
-                statusCode: 403,
-                body: JSON.stringify({ message: 'Forbidden - Acceso No Autorizado' })
+                statusCode: 400,
+                body: JSON.stringify({ message: 'El ID del vuelo es obligatorio' })
             };
         }
-        // Fin - Proteger el Lambda
 
-        // Obtener la información del usuario autenticado desde el token validado
-        const id_usuario = authPayload.user_id;
-
-        // Consultar las reseñas del usuario en la tabla DynamoDB
+        // Consulta usando el GSI para obtener reseñas por id_vuelo
         const result = await dynamodb.query({
             TableName: REVIEWS_TABLE,
-            KeyConditionExpression: 'id_usuario = :id_usuario',
+            IndexName: 'VueloIndex',  // Aquí usamos el índice GSI
+            KeyConditionExpression: 'id_vuelo = :id_vuelo',
             ExpressionAttributeValues: {
-                ':id_usuario': id_usuario
+                ':id_vuelo': id_vuelo
             }
         }).promise();
 
